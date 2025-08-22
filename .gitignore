@@ -1,2 +1,16 @@
 .env
 .vscode/*
+
+# Lambda function dependencies (installed by CI/CD)
+*/certifi/
+*/certifi-*/
+*/charset_normalizer/
+*/charset_normalizer-*/
+*/idna/
+*/idna-*/
+*/requests/
+*/requests-*/
+*/urllib3/
+*/urllib3-*/
+*/__pycache__/
+*.pyc

@@ -39,9 +39,8 @@ jobs:
         uses: aws-actions/aws-lambda-deploy@v1.0.1
         with:
           function-name: ${{ env.function-name }}
-          zip-file: lambda-deployment.zip
-          ## working-directoryからの相対ではなくリポジトリ直下基準で判定していたので明示的に指定
-        #   code-artifacts-dir: ./hello_world
-        #   handler: app.lambda_handler
-        #   runtime: python${{ env.PYTHON_VERSION }}
-        #   role: ${{ secrets.LAMBDA_ROLE_ARN }}
+          # working-directoryからの相対ではなくリポジトリ直下基準で判定していたので明示的に指定
+          code-artifacts-dir: ./hello_world
+          handler: app.lambda_handler
+          runtime: python${{ env.PYTHON_VERSION }}
+          dry-run: false

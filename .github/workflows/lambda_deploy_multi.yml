@@ -1,0 +1,61 @@
+name: Deploy Multiple Lambdas
+
+on:
+  push:
+    branches:
+      - "main"
+  workflow_dispatch: {}
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  PYTHON_VERSION: 3.13
+  lambda-role-arn: ${{ secrets.LAMBDA_ROLE_ARN }}
+
+jobs:
+  deploy-lambdas:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        function:
+          - name: hello-lambda-function
+            directory: ./hello_lambda
+            handler: app.lambda_handler
+          - name: hello-slack-function
+            directory: ./hello_slack
+            handler: app.lambda_handler
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "${{ env.PYTHON_VERSION }}"
+      
+      - name: Build ${{ matrix.function.name }}
+        run: |
+          cd ${{ matrix.function.directory }}
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-1
+
+      - name: Deploy ${{ matrix.function.name }}
+        uses: aws-actions/aws-lambda-deploy@v1.0.1
+        with:
+          function-name: ${{ matrix.function.name }}
+          code-artifacts-dir: ${{ matrix.function.directory }}
+          handler: ${{ matrix.function.handler }}
+          runtime: python${{ env.PYTHON_VERSION }}
+          role: ${{ env.lambda-role-arn }}
+          dry-run: false

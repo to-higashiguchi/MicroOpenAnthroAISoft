@@ -31,15 +31,17 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.deploy_role }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-1
 
-      - name: Deploy
+      - name: Deploy Lambda
         uses: aws-actions/aws-lambda-deploy@v1.0.1
         with:
           function-name: ${{ env.function-name }}
+          zip-file: lambda-deployment.zip
           ## working-directoryからの相対ではなくリポジトリ直下基準で判定していたので明示的に指定
-          code-artifacts-dir: ./hello_world
-          handler: app.lambda_handler
-          runtime: python${{ env.PYTHON_VERSION }}
-          role: ${{ secrets.LAMBDA_ROLE_ARN }}
+        #   code-artifacts-dir: ./hello_world
+        #   handler: app.lambda_handler
+        #   runtime: python${{ env.PYTHON_VERSION }}
+        #   role: ${{ secrets.LAMBDA_ROLE_ARN }}

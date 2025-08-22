@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - "main"
+  pull_request:
+    paths:
+      - "**/*.py"
   workflow_dispatch: {}
 
 permissions:
@@ -26,16 +29,16 @@ jobs:
           - name: hello-slack-function
             directory: ./hello_slack
             handler: app.lambda_handler
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup python
         uses: actions/setup-python@v5
         with:
           python-version: "${{ env.PYTHON_VERSION }}"
-      
+
       - name: Build ${{ matrix.function.name }}
         run: |
           cd ${{ matrix.function.directory }}

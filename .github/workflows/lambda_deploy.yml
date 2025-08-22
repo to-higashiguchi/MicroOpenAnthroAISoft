@@ -15,6 +15,7 @@ defaults:
 env:
   PYTHON_VERSION: 3.13
   function-name: sample-actions-deploy-function
+  lambda-role-arn: ${{ secrets.LAMBDA_ROLE_ARN }}
 jobs:
   main:
     runs-on: ubuntu-latest
@@ -43,5 +44,5 @@ jobs:
           code-artifacts-dir: ./hello_world
           handler: app.lambda_handler
           runtime: python${{ env.PYTHON_VERSION }}
-          role: arn:aws:iam::926849998612:role/lambda-execution-role
+          role: ${{ env.lambda-role-arn }}
           dry-run: false

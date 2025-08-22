@@ -1,6 +1,6 @@
-"""
-設定したチャンネルにBotがHello Worldを出力する
-"""
+##################################################
+# 設定したチャンネルにBotがHello Worldを出力する
+##################################################
 
 import requests
 import json
@@ -25,7 +25,6 @@ payload = {"channel": channel_id, "text": "Hello from Python! 🐍"}
 response = requests.post(url, headers=headers, data=json.dumps(payload))
 
 # レスポンスを確認
-# ... (省略) ...
 response_data = response.json()  # レスポンスを一度変数に入れる
 
 if response.status_code == 200 and response_data.get("ok"):

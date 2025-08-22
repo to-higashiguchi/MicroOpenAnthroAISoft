@@ -43,4 +43,5 @@ jobs:
           code-artifacts-dir: ./hello_world
           handler: app.lambda_handler
           runtime: python${{ env.PYTHON_VERSION }}
+          role: arn:aws:iam::926849998612:role/lambda-execution-role
           dry-run: false

@@ -40,7 +40,11 @@ jobs:
         run: |
           cd ${{ matrix.function.directory }}
           if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
+            # 依存関係を関数ディレクトリにインストール
+            pip install -r requirements.txt -t .
+            # __pycache__ディレクトリを削除（不要なファイル）
+            find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+            find . -name "*.pyc" -delete 2>/dev/null || true
           fi
 
       - name: Configure AWS credentials

@@ -146,22 +146,24 @@ app.post('/', async (c) => {
       }
 
       // Step 4: メッセージと共にファイルを投稿
-      console.log(`Posting message with file...`);
+      const payload = {
+        channel: channel_id,
+        text: message,
+        files: [
+          {
+            id: completeUploadResult.files[0].id,
+          },
+        ],
+      };
+      console.log(`Posting message with file... \n`, payload);
+
       const postMessageResponse = await fetch('https://slack.com/api/chat.postMessage', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${bot_token}`,
           'Content-Type': 'application/json; charset=utf-8',
         },
-        body: JSON.stringify({
-          channel: channel_id,
-          text: message,
-          files: [
-            {
-              id: completeUploadResult.files[0].id,
-            },
-          ],
-        }),
+        body: JSON.stringify(payload),
       });
 
       const postMessageResult = await postMessageResponse.json();

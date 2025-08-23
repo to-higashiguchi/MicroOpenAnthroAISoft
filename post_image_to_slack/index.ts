@@ -114,9 +114,11 @@ app.post('/', async (c) => {
       if (!uploadResponse.ok) {
         throw new Error(`Failed to upload file: ${uploadResponse.statusText}`);
       }
+      console.log(`Completing upload...`, JSON.stringify(uploadResponse));
+
+      await new Promise((resolve) => setTimeout(resolve, 100)); // 有効になるまで少し時間がかかる可能性がある（Geminiが言っている）
 
       // Step 3: アップロードを完了
-      console.log(`Completing upload...`);
       const completeResult = await web.files.completeUploadExternal({
         files: [{ id: file_id, title: fileName }],
       });

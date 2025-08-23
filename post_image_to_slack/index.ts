@@ -132,12 +132,18 @@ app.post('/', async (c) => {
         channel: channel_id,
         text: message,
         blocks: [
+          {
+            type: 'section',
+            text: message,
+          }
           // files.completeUploadExternal で取得したIDを使ってファイルを添付
+          /*
           {
             type: 'image',
             image_url: url_private,
             alt_text: fileName,
           },
+          */
         ],
       };
 

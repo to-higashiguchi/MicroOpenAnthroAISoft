@@ -10,7 +10,7 @@ from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
 # 遡ってメッセージを取得する期間（分数）
-MINUTES_TO_FETCH = 30
+MINUTES_TO_FETCH = 120
 
 
 def fetch_slack_reactions(token, channel_id, minutes):
@@ -174,11 +174,20 @@ def lambda_handler(event, context):
         # Slackからリアクション情報を取得
         result = fetch_slack_reactions(slack_bot_token, channel_id, minutes)
 
+        # resultにエラーキーが含まれているかチェック
+        if "error" in result and "reactions" not in result:
+            return {
+                "statusCode": 500,
+                "body": json.dumps({"error": result["error"]}),
+            }
+
+        # 'reactions' のリストのみを抽出
+        reactions_list = result.get("reactions", [])
+
+        # 変更点：レスポンスのbodyにはreactionsのリストのみを含める
         return {
             "statusCode": 200,
-            "body": json.dumps(
-                {"message": "Successfully fetched Slack reactions", "result": result}
-            ),
+            "body": json.dumps(reactions_list, ensure_ascii=False),
         }
 
     except Exception as e:
@@ -191,7 +200,18 @@ def lambda_handler(event, context):
 
 if __name__ == "__main__":
     # ローカル実行時のテスト用
+    # 実行前に環境変数を設定してください
+    # export SLACK_BOT_TOKEN="xoxb-your-token"
+    # export MAIN_CHANNEL_ID="C12345678"
+
     test_event = {"minutes": 30}
     test_context = {}
     result = lambda_handler(test_event, test_context)
+    print("--- Lambda Response ---")
     print(json.dumps(result, indent=2, ensure_ascii=False))
+
+    # bodyの中身をパースして確認
+    if result.get("statusCode") == 200 and "body" in result:
+        print("\n--- Parsed Body Content ---")
+        body_content = json.loads(result["body"])
+        print(json.dumps(body_content, indent=2, ensure_ascii=False))

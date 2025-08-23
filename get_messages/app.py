@@ -10,7 +10,7 @@ from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
 # 遡ってメッセージを取得する期間（分数）
-MINUTES_TO_FETCH = 30
+MINUTES_TO_FETCH = 120
 
 
 def fetch_slack_messages(token, channel_id, minutes):
@@ -80,17 +80,19 @@ def fetch_slack_messages(token, channel_id, minutes):
             message_ts = message["ts"]
             user_id = message.get("user", "unknown")
             text = message.get("text", "")
-            
+
             # タイムスタンプを日時に変換
             message_datetime = datetime.fromtimestamp(float(message_ts), tz=jst)
             formatted_time = message_datetime.strftime("%Y/%m/%d %H:%M:%S")
-            
+
             # ユーザー情報を取得（可能であれば）
             user_name = user_id
             try:
                 if user_id != "unknown":
                     user_info = client.users_info(user=user_id)
-                    user_name = user_info["user"]["real_name"] or user_info["user"]["name"]
+                    user_name = (
+                        user_info["user"]["real_name"] or user_info["user"]["name"]
+                    )
                     # APIレート制限を避けるため少し待機
                     time.sleep(0.5)
             except SlackApiError:
@@ -104,7 +106,9 @@ def fetch_slack_messages(token, channel_id, minutes):
                 "user_name": user_name,
                 "text": text,
                 "has_reactions": bool(message.get("reactions")),
-                "reaction_count": sum(len(r.get("users", [])) for r in message.get("reactions", []))
+                "reaction_count": sum(
+                    len(r.get("users", [])) for r in message.get("reactions", [])
+                ),
             }
 
             # スレッドメッセージの場合
@@ -123,8 +127,10 @@ def fetch_slack_messages(token, channel_id, minutes):
                 message_data["file_count"] = 0
 
             result["messages"].append(message_data)
-            
-            print(f"📝 [{formatted_time}] {user_name}: {text[:50]}{'...' if len(text) > 50 else ''}")
+
+            print(
+                f"📝 [{formatted_time}] {user_name}: {text[:50]}{'...' if len(text) > 50 else ''}"
+            )
 
         print("\n" + "-" * 40)
         print("✅ 処理が完了しました。")
@@ -178,10 +184,22 @@ def lambda_handler(event, context):
         # Slackからメッセージ情報を取得
         result = fetch_slack_messages(slack_bot_token, channel_id, minutes)
 
+        # APIエラーなどがresultに含まれている場合はエラーとして返す
+        if "error" in result and not result.get("messages"):
+            return {
+                "statusCode": 500,
+                "body": json.dumps({"error": result["error"]}),
+            }
+
+        # resultからmessagesのリストのみを抽出
+        messages_list = result.get("messages", [])
+
+        # 変更点: レスポンスボディにはmessagesのリストのみを含める
         return {
             "statusCode": 200,
             "body": json.dumps(
-                {"message": "Successfully fetched Slack messages", "result": result}
+                messages_list,
+                ensure_ascii=False,  # 日本語のテキストが文字化けしないように設定
             ),
         }
 
@@ -195,7 +213,21 @@ def lambda_handler(event, context):
 
 if __name__ == "__main__":
     # ローカル実行時のテスト用
+    # 実行前に環境変数を設定してください
+    # export SLACK_BOT_TOKEN="xoxb-your-token"
+    # export MAIN_CHANNEL_ID="C12345678"
+
     test_event = {"minutes": 30}
     test_context = {}
     result = lambda_handler(test_event, test_context)
+    print("--- Lambda Response ---")
     print(json.dumps(result, indent=2, ensure_ascii=False))
+
+    # bodyの中身をパースして確認
+    if result.get("statusCode") == 200 and "body" in result:
+        print("\n--- Parsed Body Content ---")
+        try:
+            body_content = json.loads(result["body"])
+            print(json.dumps(body_content, indent=2, ensure_ascii=False))
+        except json.JSONDecodeError:
+            print("Body is not a valid JSON.")

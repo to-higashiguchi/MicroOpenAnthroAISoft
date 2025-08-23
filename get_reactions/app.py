@@ -9,16 +9,21 @@ from datetime import datetime, timedelta, timezone
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
-# 遡ってメッセージを取得する期間（日数）
-DAYS_TO_FETCH = 7
+# 遡ってメッセージを取得する期間（分数）
+MINUTES_TO_FETCH = 30
 
 
-def fetch_slack_reactions(token, channel_id, days):
+def fetch_slack_reactions(token, channel_id, minutes):
     """
     指定されたSlackチャンネルのメッセージとリアクションを取得して出力します。
     Lambda用に結果も返します。
     """
-    result = {"channel_id": channel_id, "days": days, "messages": [], "summary": {}}
+    result = {
+        "channel_id": channel_id,
+        "minutes": minutes,
+        "messages": [],
+        "summary": {},
+    }
 
     if not token:
         error_msg = "エラー: Slackボットトークンが設定されていません。"
@@ -31,19 +36,21 @@ def fetch_slack_reactions(token, channel_id, days):
     # タイムゾーンを考慮した期間設定（JST）
     jst = timezone(timedelta(hours=+9))
     now = datetime.now(jst)
-    past_date = now - timedelta(days=days)
+    past_date = now - timedelta(minutes=minutes)
 
     # Unixタイムスタンプに変換
     latest_ts = now.timestamp()
     oldest_ts = past_date.timestamp()
 
     print(f"✅ チャンネル '{channel_id}' のメッセージを取得します。")
-    print(f"✅ 期間: {past_date.strftime('%Y/%m/%d')} 〜 {now.strftime('%Y/%m/%d')}")
+    print(
+        f"✅ 期間: {past_date.strftime('%Y/%m/%d %H:%M')} 〜 {now.strftime('%Y/%m/%d %H:%M')}"
+    )
     print("-" * 40)
 
     result["period"] = {
-        "from": past_date.strftime("%Y/%m/%d"),
-        "to": now.strftime("%Y/%m/%d"),
+        "from": past_date.strftime("%Y/%m/%d %H:%M"),
+        "to": now.strftime("%Y/%m/%d %H:%M"),
     }
 
     try:
@@ -178,11 +185,11 @@ def lambda_handler(event, context):
                 ),
             }
 
-        # eventから期間を設定できるようにする（デフォルトは7日）
-        days = event.get("days", DAYS_TO_FETCH)
+        # eventから期間を設定できるようにする（デフォルトは30分）
+        minutes = event.get("minutes", MINUTES_TO_FETCH)
 
         # Slackからリアクション情報を取得
-        result = fetch_slack_reactions(slack_bot_token, channel_id, days)
+        result = fetch_slack_reactions(slack_bot_token, channel_id, minutes)
 
         return {
             "statusCode": 200,
@@ -201,7 +208,7 @@ def lambda_handler(event, context):
 
 if __name__ == "__main__":
     # ローカル実行時のテスト用
-    test_event = {"days": 7}
+    test_event = {"minutes": 30}
     test_context = {}
     result = lambda_handler(test_event, test_context)
     print(json.dumps(result, indent=2, ensure_ascii=False))

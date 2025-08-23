@@ -29,6 +29,9 @@ jobs:
           - name: hello-slack-function
             directory: ./hello_slack
             handler: app.lambda_handler
+          - name: slack-get_reactions_function
+            directory: ./get_reactions
+            handler: app.lambda_handler
 
     steps:
       - name: Checkout code

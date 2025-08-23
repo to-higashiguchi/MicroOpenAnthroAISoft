@@ -25,8 +25,7 @@ jobs:
         function:
           - name: gen-image-function
             directory: ./gen_image
-            handler: index.handler
-            code-artifacts-dir: ./gen_image/dist
+            handler: dist/index.handler
 
     steps:
       - name: Checkout code
@@ -57,7 +56,7 @@ jobs:
         uses: aws-actions/aws-lambda-deploy@v1.0.1
         with:
           function-name: ${{ matrix.function.name }}
-          code-artifacts-dir: ${{ matrix.function.code-artifacts-dir }}
+          code-artifacts-dir: ${{ matrix.function.directory }}
           handler: ${{ matrix.function.handler }}
           runtime: nodejs22.x
           role: ${{ env.lambda-role-arn }}

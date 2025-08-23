@@ -3,7 +3,7 @@ name: Deploy Multiple ts codes to Lambdas
 on:
   push:
     branches:
-      - "gen-image"
+      - "post-image-to-slack"
   pull_request:
     paths:
       - "**/*.ts"
@@ -25,6 +25,9 @@ jobs:
         function:
           - name: gen-image-function
             directory: ./gen_image
+            handler: dist/index.handler
+          - name: post-image-to-slack-function
+            directory: ./post_image_to_slack
             handler: dist/index.handler
 
     steps:

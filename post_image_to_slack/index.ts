@@ -129,7 +129,7 @@ app.post('/', async (c) => {
       const { url_private, permalink } = completeResult.files[0];
       console.log(`Complete upload response: ${JSON.stringify(completeResult.files[0])}`);
 
-      await new Promise((resolve) => setTimeout(resolve, 100)); // url_privateが有効になるまで少し時間がかかる可能性がある（Geminiが言っている）
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // url_privateが有効になるまで少し時間がかかる可能性がある（Geminiが言っている）
 
       // Step 4: メッセージと共にファイルを投稿
       const payload: ChatPostMessageArguments = {

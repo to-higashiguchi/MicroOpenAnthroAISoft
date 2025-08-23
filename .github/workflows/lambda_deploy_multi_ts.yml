@@ -55,7 +55,7 @@ jobs:
         uses: aws-actions/aws-lambda-deploy@v1.0.1
         with:
           function-name: ${{ matrix.function.name }}
-          code-artifacts-dir: ${{ matrix.function.directory }}
+          code-artifacts-dir: ${{ matrix.function.directory }}/dist
           handler: ${{ matrix.function.handler }}
           runtime: nodejs22.x
           role: ${{ env.lambda-role-arn }}

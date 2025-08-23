@@ -126,7 +126,7 @@ app.post('/', async (c) => {
       if (!completeResult.files || completeResult.files.length === 0) {
         throw new HTTPException(500, { message: 'failed to upload file to slack.' });
       }
-      const { url_private } = completeResult.files[0];
+      const { url_private, permalink } = completeResult.files[0];
       console.log(`Complete upload response: ${JSON.stringify(completeResult.files[0])}`);
 
       await new Promise((resolve) => setTimeout(resolve, 100)); // url_privateが有効になるまで少し時間がかかる可能性がある（Geminiが言っている）
@@ -146,7 +146,7 @@ app.post('/', async (c) => {
           // files.completeUploadExternal で取得したIDを使ってファイルを添付
           {
             type: 'image',
-            image_url: url_private,
+            image_url: permalink,
             alt_text: fileName,
           },
         ],

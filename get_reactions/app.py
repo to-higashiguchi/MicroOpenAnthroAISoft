@@ -15,13 +15,13 @@ MINUTES_TO_FETCH = 30
 
 def fetch_slack_reactions(token, channel_id, minutes):
     """
-    指定されたSlackチャンネルのメッセージとリアクションを取得して出力します。
+    指定されたSlackチャンネルのリアクションを取得して出力します。
     Lambda用に結果も返します。
     """
     result = {
         "channel_id": channel_id,
         "minutes": minutes,
-        "messages": [],
+        "reactions": [],
         "summary": {},
     }
 
@@ -84,28 +84,9 @@ def fetch_slack_reactions(token, channel_id, minutes):
             # リアクションがついているメッセージのみ処理
             if message.get("reactions"):
                 message_ts = message["ts"]
-                message_text = message.get("text", "(テキストなし)").replace("\n", " ")
-
-                # メッセージのパーマリンクを取得
-                permalink_response = client.chat_getPermalink(
-                    channel=channel_id, message_ts=message_ts
-                )
-                permalink = permalink_response.get("permalink", "")
-
-                print(f"\n💬 メッセージ: 「{message_text[:60]}...」")
-                print(f"   (リンク: {permalink})")
-
-                message_data = {
-                    "timestamp": message_ts,
-                    "text": message_text,
-                    "permalink": permalink,
-                    "reactions": [],
-                }
 
                 try:
                     # reactions.get APIでリアクションの詳細を取得
-                    # conversations.historyの応答にもリアクションは含まれますが、
-                    # このメソッドを使うことでより詳細な情報が得られます。
                     reactions_response = client.reactions_get(
                         channel=channel_id, timestamp=message_ts, full=True
                     )
@@ -120,13 +101,15 @@ def fetch_slack_reactions(token, channel_id, minutes):
                             users = reaction["users"]
                             print(f"  - :{name}: by {', '.join(users)}")
 
-                            message_data["reactions"].append(
-                                {"name": name, "users": users, "count": len(users)}
+                            result["reactions"].append(
+                                {
+                                    "name": name, 
+                                    "users": users, 
+                                    "count": len(users),
+                                    "timestamp": message_ts
+                                }
                             )
                             reaction_count += len(users)
-                    else:
-                        # このケースは通常 `message.get("reactions")` で弾かれるため稀
-                        print("  - リアクション情報がありませんでした。")
 
                     # Slack APIのレートリミットを避けるための待機 (Tier3: 50+ req/min)
                     time.sleep(1.2)
@@ -134,9 +117,10 @@ def fetch_slack_reactions(token, channel_id, minutes):
                 except SlackApiError as e:
                     error_msg = f"リアクション取得エラー: {e.response['error']}"
                     print(f"  ❌ {error_msg}")
-                    message_data["error"] = error_msg
-
-                result["messages"].append(message_data)
+                    # エラーは個別のリアクションではなく全体のエラーとして記録
+                    if "error" not in result:
+                        result["error"] = []
+                    result["error"].append(error_msg)
 
         result["summary"]["reaction_count"] = reaction_count
         print("\n" + "-" * 40)
@@ -194,7 +178,7 @@ def lambda_handler(event, context):
         return {
             "statusCode": 200,
             "body": json.dumps(
-                {"message": "Successfully fetched Slack reactions", "result": result}
+                {"message": "Successfully fetched Slack reactions", "reactions": result}
             ),
         }
 

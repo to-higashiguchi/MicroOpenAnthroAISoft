@@ -26,6 +26,7 @@ jobs:
           - name: gen-image-function
             directory: ./gen_image
             handler: index.handler
+            code-artifacts-dir: ./gen_image/dist
 
     steps:
       - name: Checkout code
@@ -42,6 +43,7 @@ jobs:
           if [ -f package.json ]; then
             # 依存関係を関数ディレクトリにインストール
             npm install
+            npm run build
           fi
 
       - name: Configure AWS credentials
@@ -55,7 +57,7 @@ jobs:
         uses: aws-actions/aws-lambda-deploy@v1.0.1
         with:
           function-name: ${{ matrix.function.name }}
-          code-artifacts-dir: ${{ matrix.function.directory }}/dist
+          code-artifacts-dir: ${{ matrix.function.code-artifacts-dir }}
           handler: ${{ matrix.function.handler }}
           runtime: nodejs22.x
           role: ${{ env.lambda-role-arn }}

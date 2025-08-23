@@ -1,0 +1,62 @@
+name: Deploy Multiple ts codes to Lambdas
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    paths:
+      - "**/*.ts"
+  workflow_dispatch: {}
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  NODE_VERSION: 22.18.0
+  lambda-role-arn: ${{ secrets.LAMBDA_ROLE_ARN }}
+
+jobs:
+  deploy-lambdas:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        function:
+          - name: gen-image-function
+            directory: ./gen_image
+            handler: index.handler
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup python
+        uses: actions/setup-node@v4
+        with:
+          node-version: "${{ env.NODE_VERSION }}"
+
+      - name: Build ${{ matrix.function.name }}
+        run: |
+          cd ${{ matrix.function.directory }}
+          if [ -f package.json ]; then
+            # 依存関係を関数ディレクトリにインストール
+            npm install
+          fi
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-1
+
+      - name: Deploy ${{ matrix.function.name }}
+        uses: aws-actions/aws-lambda-deploy@v1.0.1
+        with:
+          function-name: ${{ matrix.function.name }}
+          code-artifacts-dir: ${{ matrix.function.directory }}
+          handler: ${{ matrix.function.handler }}
+          runtime: nodejs22.x
+          role: ${{ env.lambda-role-arn }}
+          dry-run: false

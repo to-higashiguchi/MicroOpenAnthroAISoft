@@ -14,3 +14,4 @@
 */urllib3-*/
 */__pycache__/
 *.pyc
+gen_image/dist

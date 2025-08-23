@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { handle } from 'hono/aws-lambda';
 import { HTTPException } from 'hono/http-exception';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { ChatPostMessageArguments, WebClient } from '@slack/web-api';
 
 const app = new Hono();
 const s3Client = new S3Client({ region: process.env.AWS_REGION_S3 || 'us-east-1' });
@@ -14,6 +15,7 @@ app.post('/', async (c) => {
   if (!bot_token || !channel_id) {
     throw new HTTPException(500, { message: 'Internal service error' });
   }
+  const web = new WebClient(bot_token);
 
   const { message, s3Url } = await c.req.json();
   if (!message) {
@@ -87,29 +89,25 @@ app.post('/', async (c) => {
 
       console.log(`Upload URL payload: ${JSON.stringify(params)}`);
 
-      const getUploadUrlResponse = await fetch(
-        'https://slack.com/api/files.getUploadURLExternal',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${bot_token}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: params,
-        },
-      );
+      const uploadUrlResult = await web.files.getUploadURLExternal({
+        filename: fileName,
+        length: fileBlob.size,
+      });
 
-      const getUploadUrlResult = await getUploadUrlResponse.json();
-      console.log(`Upload URL response: ${JSON.stringify(getUploadUrlResult)}`);
+      const { upload_url, file_id } = uploadUrlResult;
+      console.log(`Upload URL response: ${JSON.stringify(uploadUrlResult)}`);
 
-      if (!getUploadUrlResult.ok) {
-        throw new Error(`Failed to get upload URL: ${getUploadUrlResult.error}`);
+      if (!upload_url || !file_id) {
+        throw new HTTPException(500, { message: 'failed to upload file to slack.' });
       }
 
       // Step 2: ファイルをアップロード
       console.log(`Uploading file to Slack...`);
-      const uploadResponse = await fetch(getUploadUrlResult.upload_url, {
+      const uploadResponse = await fetch(upload_url, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/octet-stream',
+        },
         body: fileBlob,
       });
 
@@ -119,58 +117,45 @@ app.post('/', async (c) => {
 
       // Step 3: アップロードを完了
       console.log(`Completing upload...`);
-      const completeUploadResponse = await fetch(
-        'https://slack.com/api/files.completeUploadExternal',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${bot_token}`,
-            'Content-Type': 'application/json; charset=utf-8',
-          },
-          body: JSON.stringify({
-            files: [
-              {
-                id: getUploadUrlResult.file_id,
-                title: fileName,
-              },
-            ],
-          }),
-        },
-      );
+      const completeResult = await web.files.completeUploadExternal({
+        files: [{ id: file_id, title: fileName }],
+      });
 
-      const completeUploadResult = await completeUploadResponse.json();
-      console.log(`Complete upload response: ${JSON.stringify(completeUploadResult)}`);
-
-      if (!completeUploadResult.ok) {
-        throw new Error(`Failed to complete upload: ${completeUploadResult.error}`);
+      if (!completeResult.files || completeResult.files.length === 0) {
+        throw new HTTPException(500, { message: 'failed to upload file to slack.' });
       }
+      const { id, url_private } = completeResult.files[0];
+      console.log(`Complete upload response: ${JSON.stringify({ id, url_private })}`);
 
       // Step 4: メッセージと共にファイルを投稿
-      const payload = {
+      const payload: ChatPostMessageArguments = {
         channel: channel_id,
         text: message,
-        files: [
+        blocks: [
           {
-            id: completeUploadResult.files[0].id,
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: message,
+            },
+          },
+          // files.completeUploadExternal で取得したIDを使ってファイルを添付
+          {
+            type: 'image',
+            image_url: url_private,
+            alt_text: fileName,
           },
         ],
       };
+
       console.log(`Posting message with file... \n`, payload);
 
-      const postMessageResponse = await fetch('https://slack.com/api/chat.postMessage', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${bot_token}`,
-          'Content-Type': 'application/json; charset=utf-8',
-        },
-        body: JSON.stringify(payload),
-      });
+      const postMessageResult = await web.chat.postMessage(payload);
 
-      const postMessageResult = await postMessageResponse.json();
       console.log(`Post message response: ${JSON.stringify(postMessageResult)}`);
 
       return c.json({
-        result: postMessageResponse.status,
+        result: postMessageResult.ok,
         response: postMessageResult,
       });
     } catch (error) {

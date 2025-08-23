@@ -77,17 +77,20 @@ app.post('/', async (c) => {
   if (fileBlob && fileName) {
     try {
       // Step 1: アップロードURLを取得
-      console.log(`Getting upload URL for file: ${fileName}`);
+      console.log(`Getting upload URL for file: ${fileName}, size: ${fileBlob.size}`);
+      const uploadUrlPayload = {
+        filename: fileName,
+        length: fileBlob.size,
+      };
+      console.log(`Upload URL payload: ${JSON.stringify(uploadUrlPayload)}`);
+      
       const getUploadUrlResponse = await fetch('https://slack.com/api/files.getUploadURLExternal', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${bot_token}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json; charset=utf-8',
         },
-        body: JSON.stringify({
-          filename: fileName,
-          length: fileBlob.size,
-        }),
+        body: JSON.stringify(uploadUrlPayload),
       });
 
       const getUploadUrlResult = await getUploadUrlResponse.json();
@@ -114,7 +117,7 @@ app.post('/', async (c) => {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${bot_token}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json; charset=utf-8',
         },
         body: JSON.stringify({
           files: [
@@ -139,7 +142,7 @@ app.post('/', async (c) => {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${bot_token}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json; charset=utf-8',
         },
         body: JSON.stringify({
           channel: channel_id,

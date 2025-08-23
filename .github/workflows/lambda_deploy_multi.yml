@@ -23,14 +23,17 @@ jobs:
     strategy:
       matrix:
         function:
-          - name: hello-lambda-function
-            directory: ./hello_lambda
-            handler: app.lambda_handler
-          - name: hello-slack-function
-            directory: ./hello_slack
-            handler: app.lambda_handler
+          # - name: hello-lambda-function
+          #   directory: ./hello_lambda
+          #   handler: app.lambda_handler
+          # - name: hello-slack-function
+          #   directory: ./hello_slack
+          #   handler: app.lambda_handler
           - name: slack-get_reactions_function
             directory: ./get_reactions
+            handler: app.lambda_handler
+          - name: slack-get_messages_function
+            directory: ./get_messages
             handler: app.lambda_handler
 
     steps:

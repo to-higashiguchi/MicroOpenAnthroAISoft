@@ -20,7 +20,7 @@ app.post('/generate', async (c) => {
 
     // 2. Bedrock Nova Canvas呼び出し
     const bedrock = new BedrockRuntimeClient({
-      region: process.env.AWS_REGION || 'us-east-1',
+      region: process.env.AWS_REGION_BEDROCK || 'us-east-1',
     });
     const modelId = 'amazon.nova-canvas-v1:0'; // Nova CanvasのモデルID
 
@@ -61,7 +61,7 @@ app.post('/generate', async (c) => {
 
     // 3. S3にアップロード
     const s3 = new S3Client({});
-    const bucket = process.env.S3_BUCKET_NAME || 'your-s3-bucket';
+    const bucket = process.env.S3_BUCKET_SAVE_IMAGE || 'your-s3-bucket';
     const key = `generated/${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
 
     await s3.send(

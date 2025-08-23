@@ -1,11 +1,11 @@
 import { Hono } from 'hono';
 import { handle } from 'hono/aws-lambda';
 import { HTTPException } from 'hono/http-exception';
-import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+// import { S3Client, GetObjectCommand, S3 } from '@aws-sdk/client-s3';
 import { ChatPostMessageArguments, WebClient } from '@slack/web-api';
 
 const app = new Hono();
-const s3Client = new S3Client({ region: process.env.AWS_REGION_S3 || 'us-east-1' });
+// const s3Client = new S3Client({ region: process.env.AWS_REGION_S3 || 'us-east-1' });
 
 app.get('/', (c) => c.text('Hello from Hono on AWS Lambda!'));
 
@@ -22,11 +22,39 @@ app.post('/', async (c) => {
     return c.json({ error: 'message is required' }, 400);
   }
 
-  let fileBlob = null;
+  //  let fileBlob = null;
   let fileName = null;
 
   // S3URLが提供された場合、画像を取得
   if (s3Url) {
+    const url = new URL(s3Url);
+    const pathParts = url.pathname.split('/').filter((part) => part !== '');
+    fileName = pathParts[pathParts.length - 1];
+
+    const S3_URL_ENDPOINT = process.env.S3_URL_ENDPOINT;
+    if (!S3_URL_ENDPOINT) {
+      throw new HTTPException(400, { message: 'invalid s3Url.' });
+    }
+
+    const image_url = `${S3_URL_ENDPOINT}/${fileName}`;
+
+    const payload: ChatPostMessageArguments = {
+      channel: channel_id,
+      text: `${message}\n\n${image_url}`,
+    };
+
+    console.log(`Posting message with file... \n`, JSON.stringify(payload));
+
+    const postMessageResult = await web.chat.postMessage(payload);
+
+    console.log(`Post message response: ${JSON.stringify(postMessageResult)}`);
+
+    return c.json({
+      result: postMessageResult.ok,
+      response: postMessageResult,
+    });
+
+    /*
     try {
       // S3 URLからバケット名とキーを抽出
       const url = new URL(s3Url);
@@ -166,6 +194,7 @@ app.post('/', async (c) => {
       console.error('Error uploading file to Slack:', JSON.stringify(error));
       return c.json({ error: 'Failed to upload file to Slack' }, 500);
     }
+    */
   } else {
     // テキストのみの投稿
     const payload = { channel: channel_id, text: message };

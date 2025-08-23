@@ -28,7 +28,7 @@ app.post('/generate', async (c) => {
       taskType: 'TEXT_IMAGE',
       textToImageParams: {
         text: prompt,
-        negativeText: '', // 生成される画像から除外したい要素を指定するネガティブプロンプト
+        // negativeText: '', // 生成される画像から除外したい要素を指定するネガティブプロンプト
       },
       imageGenerationConfig: {
         numberOfImages: 1,

@@ -20,9 +20,8 @@ app.post('/', async (c) => {
 
   const payload = { channel: channel_id, text: message };
 
-
-  console.log(`post request to slack. params => ${JSON.stringify(payload)}`)
-  const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
+  console.log(`post request to slack. params => ${JSON.stringify(payload)}`);
+  const response = await fetch('https://slack.com/api/chat.postMessage', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${bot_token}`,
@@ -31,7 +30,7 @@ app.post('/', async (c) => {
     body: JSON.stringify(payload),
   });
 
-  console.log(`response from slack. ${response.status} ${response.body}`)
+  console.log(`response from slack. ${response.status} ${await response.json()}`);
   return c.json({
     result: response.status,
   });

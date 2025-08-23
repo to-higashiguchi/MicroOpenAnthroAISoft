@@ -75,28 +75,94 @@ app.post('/', async (c) => {
 
   // Slackに投稿
   if (fileBlob && fileName) {
-    // 画像をSlackにアップロード
-    const formData = new FormData();
-    formData.append('file', fileBlob, fileName);
-    formData.append('channels', channel_id);
-    formData.append('initial_comment', message);
+    try {
+      // Step 1: アップロードURLを取得
+      console.log(`Getting upload URL for file: ${fileName}`);
+      const getUploadUrlResponse = await fetch('https://slack.com/api/files.getUploadURLExternal', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${bot_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          filename: fileName,
+          length: fileBlob.size,
+        }),
+      });
 
-    console.log(`Uploading file to slack. filename => ${fileName}`);
-    const uploadResponse = await fetch('https://slack.com/api/files.upload', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${bot_token}`,
-      },
-      body: formData,
-    });
+      const getUploadUrlResult = await getUploadUrlResponse.json();
+      console.log(`Upload URL response: ${JSON.stringify(getUploadUrlResult)}`);
 
-    const uploadResult = await uploadResponse.json();
-    console.log(`response from slack file upload. ${uploadResponse.status} ${JSON.stringify(uploadResult)}`);
-    
-    return c.json({
-      result: uploadResponse.status,
-      response: uploadResult,
-    });
+      if (!getUploadUrlResult.ok) {
+        throw new Error(`Failed to get upload URL: ${getUploadUrlResult.error}`);
+      }
+
+      // Step 2: ファイルをアップロード
+      console.log(`Uploading file to Slack...`);
+      const uploadResponse = await fetch(getUploadUrlResult.upload_url, {
+        method: 'POST',
+        body: fileBlob,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error(`Failed to upload file: ${uploadResponse.statusText}`);
+      }
+
+      // Step 3: アップロードを完了
+      console.log(`Completing upload...`);
+      const completeUploadResponse = await fetch('https://slack.com/api/files.completeUploadExternal', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${bot_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          files: [
+            {
+              id: getUploadUrlResult.file_id,
+              title: fileName,
+            },
+          ],
+        }),
+      });
+
+      const completeUploadResult = await completeUploadResponse.json();
+      console.log(`Complete upload response: ${JSON.stringify(completeUploadResult)}`);
+
+      if (!completeUploadResult.ok) {
+        throw new Error(`Failed to complete upload: ${completeUploadResult.error}`);
+      }
+
+      // Step 4: メッセージと共にファイルを投稿
+      console.log(`Posting message with file...`);
+      const postMessageResponse = await fetch('https://slack.com/api/chat.postMessage', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${bot_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          channel: channel_id,
+          text: message,
+          files: [
+            {
+              id: completeUploadResult.files[0].id,
+            },
+          ],
+        }),
+      });
+
+      const postMessageResult = await postMessageResponse.json();
+      console.log(`Post message response: ${JSON.stringify(postMessageResult)}`);
+
+      return c.json({
+        result: postMessageResponse.status,
+        response: postMessageResult,
+      });
+    } catch (error) {
+      console.error('Error uploading file to Slack:', error);
+      return c.json({ error: 'Failed to upload file to Slack' }, 500);
+    }
   } else {
     // テキストのみの投稿
     const payload = { channel: channel_id, text: message };

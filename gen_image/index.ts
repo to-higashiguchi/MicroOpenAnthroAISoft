@@ -61,7 +61,9 @@ app.post('/generate', async (c) => {
     const imageBuffer = Buffer.from(base64Image, 'base64');
 
     // 3. S3にアップロード
-    const s3 = new S3Client({});
+    const s3 = new S3Client({
+      region: process.env.AWS_REGION_S3 || 'us-east-1',
+    });
     const bucket = process.env.S3_BUCKET_SAVE_IMAGE || 'your-s3-bucket';
     const key = `generated/${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
     console.log(`save image to S3. params=> ${JSON.stringify({

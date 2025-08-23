@@ -134,8 +134,11 @@ app.post('/', async (c) => {
         blocks: [
           {
             type: 'section',
-            text: message,
-          }
+            text: {
+              type: 'plain_text',
+              text: message,
+            },
+          },
           // files.completeUploadExternal で取得したIDを使ってファイルを添付
           /*
           {
@@ -147,7 +150,7 @@ app.post('/', async (c) => {
         ],
       };
 
-      console.log(`Posting message with file... \n`, payload);
+      console.log(`Posting message with file... \n`, JSON.stringify(payload));
 
       const postMessageResult = await web.chat.postMessage(payload);
 

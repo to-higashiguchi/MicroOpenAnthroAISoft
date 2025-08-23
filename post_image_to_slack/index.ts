@@ -163,7 +163,7 @@ app.post('/', async (c) => {
         response: postMessageResult,
       });
     } catch (error) {
-      console.error('Error uploading file to Slack:', error);
+      console.error('Error uploading file to Slack:', JSON.stringify(error));
       return c.json({ error: 'Failed to upload file to Slack' }, 500);
     }
   } else {

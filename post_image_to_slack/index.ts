@@ -4,7 +4,7 @@ import { HTTPException } from 'hono/http-exception';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 
 const app = new Hono();
-const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
+const s3Client = new S3Client({ region: process.env.AWS_REGION_S3 || 'us-east-1', });
 
 app.get('/', (c) => c.text('Hello from Hono on AWS Lambda!'));
 
@@ -32,6 +32,12 @@ app.post('/', async (c) => {
       const bucket = url.hostname.split('.')[0];
       const key = pathParts.join('/');
       fileName = pathParts[pathParts.length - 1];
+
+      // S3でアクセスできるのは指定のバケットの下のファイルのみ
+      const S3_BUCKET_SAVE_IMAGE = process.env.S3_BUCKET_SAVE_IMAGE || 'your-s3-bucket';
+      if (bucket !== S3_BUCKET_SAVE_IMAGE) {
+        throw new HTTPException(400, { message: 'invalid s3Url.' });
+      }
 
       console.log(`Downloading from S3: bucket=${bucket}, key=${key}`);
 

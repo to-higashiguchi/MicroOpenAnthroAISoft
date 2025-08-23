@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { handle } from 'hono/aws-lambda';
+import { HTTPException } from 'hono/http-exception';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import {
   BedrockRuntimeClient,
@@ -12,12 +13,20 @@ app.get('/', (c) => c.text('Hello from Hono on AWS Lambda!'));
 
 app.post('/generate', async (c) => {
   try {
+    // 誰でもAPIをコールできるのはまずいかもなので、簡易的にヘッダーでトークン認証を入れる
+    const header = await c.req.header();
+    const token = header['x-api-token'];
+    const GEN_IMAGE_API_TOKEN = process.env.GEN_IMAGE_API_TOKEN || crypto.randomUUID();
+    if (token !== GEN_IMAGE_API_TOKEN) {
+      throw new HTTPException(403, { message: 'Access denied' });
+    }
+
     // 1. パラメータ取得
     const { prompt } = await c.req.json();
     if (!prompt) {
       return c.json({ error: 'prompt is required' }, 400);
     }
-    console.log(`receive request. params=> ${JSON.stringify({ prompt })}`)
+    console.log(`receive request. params=> ${JSON.stringify({ prompt })}`);
 
     // 2. Bedrock Nova Canvas呼び出し
     const bedrock = new BedrockRuntimeClient({
@@ -66,10 +75,12 @@ app.post('/generate', async (c) => {
     });
     const bucket = process.env.S3_BUCKET_SAVE_IMAGE || 'your-s3-bucket';
     const key = `generated/${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
-    console.log(`save image to S3. params=> ${JSON.stringify({
+    console.log(
+      `save image to S3. params=> ${JSON.stringify({
         Bucket: bucket,
         Key: key,
-    })}`);
+      })}`,
+    );
 
     await s3.send(
       new PutObjectCommand({
@@ -82,7 +93,7 @@ app.post('/generate', async (c) => {
 
     // 4. S3パスを返す
     const s3Url = `s3://${bucket}/${key}`;
-    console.log(`send response. params=> ${JSON.stringify({ s3Url })} `)
+    console.log(`send response. params=> ${JSON.stringify({ s3Url })} `);
     return c.json({
       success: true,
       s3Url,

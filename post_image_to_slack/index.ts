@@ -20,6 +20,8 @@ app.post('/', async (c) => {
 
   const payload = { channel: channel_id, text: message };
 
+
+  console.log(`post request to slack. params => ${JSON.stringify(payload)}`)
   const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
     method: 'POST',
     headers: {
@@ -29,6 +31,7 @@ app.post('/', async (c) => {
     body: JSON.stringify(payload),
   });
 
+  console.log(`response from slack. ${response.status} ${response.body}`)
   return c.json({
     result: response.status,
   });

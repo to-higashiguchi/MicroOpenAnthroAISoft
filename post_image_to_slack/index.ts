@@ -13,7 +13,7 @@ app.post('/', async (c) => {
     throw new HTTPException(500, { message: 'Internal service error' });
   }
 
-  const message = await c.req.json();
+  const { message } = await c.req.json();
   if (!message) {
     return c.json({ error: 'message is required' }, 400);
   }

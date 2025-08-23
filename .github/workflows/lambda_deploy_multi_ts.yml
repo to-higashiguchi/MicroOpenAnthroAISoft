@@ -3,7 +3,7 @@ name: Deploy Multiple ts codes to Lambdas
 on:
   push:
     branches:
-      - "post-image-to-slack"
+      - "main"
   pull_request:
     paths:
       - "**/*.ts"

@@ -4,7 +4,7 @@ import { HTTPException } from 'hono/http-exception';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 
 const app = new Hono();
-const s3Client = new S3Client({ region: process.env.AWS_REGION_S3 || 'us-east-1', });
+const s3Client = new S3Client({ region: process.env.AWS_REGION_S3 || 'us-east-1' });
 
 app.get('/', (c) => c.text('Hello from Hono on AWS Lambda!'));
 
@@ -28,7 +28,7 @@ app.post('/', async (c) => {
     try {
       // S3 URLからバケット名とキーを抽出
       const url = new URL(s3Url);
-      const pathParts = url.pathname.split('/').filter(part => part !== '');
+      const pathParts = url.pathname.split('/').filter((part) => part !== '');
       const bucket = url.hostname.split('.')[0];
       const key = pathParts.join('/');
       fileName = pathParts[pathParts.length - 1];
@@ -51,20 +51,22 @@ app.post('/', async (c) => {
       if (response.Body) {
         const chunks = [];
         const reader = response.Body.transformToWebStream().getReader();
-        
+
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
           chunks.push(value);
         }
-        
-        const uint8Array = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
+
+        const uint8Array = new Uint8Array(
+          chunks.reduce((acc, chunk) => acc + chunk.length, 0),
+        );
         let offset = 0;
         for (const chunk of chunks) {
           uint8Array.set(chunk, offset);
           offset += chunk.length;
         }
-        
+
         fileBlob = new Blob([uint8Array], { type: response.ContentType || 'image/jpeg' });
       }
     } catch (error) {
@@ -78,20 +80,24 @@ app.post('/', async (c) => {
     try {
       // Step 1: アップロードURLを取得
       console.log(`Getting upload URL for file: ${fileName}, size: ${fileBlob.size}`);
-      const uploadUrlPayload = {
-        filename: fileName,
-        length: fileBlob.size,
-      };
-      console.log(`Upload URL payload: ${JSON.stringify(uploadUrlPayload)}`);
-      
-      const getUploadUrlResponse = await fetch('https://slack.com/api/files.getUploadURLExternal', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${bot_token}`,
-          'Content-Type': 'application/json; charset=utf-8',
+
+      const params = new URLSearchParams();
+      params.append('filename', fileName);
+      params.append('length', `${fileBlob.size}`);
+
+      console.log(`Upload URL payload: ${JSON.stringify(params)}`);
+
+      const getUploadUrlResponse = await fetch(
+        'https://slack.com/api/files.getUploadURLExternal',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${bot_token}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: params,
         },
-        body: JSON.stringify(uploadUrlPayload),
-      });
+      );
 
       const getUploadUrlResult = await getUploadUrlResponse.json();
       console.log(`Upload URL response: ${JSON.stringify(getUploadUrlResult)}`);
@@ -113,21 +119,24 @@ app.post('/', async (c) => {
 
       // Step 3: アップロードを完了
       console.log(`Completing upload...`);
-      const completeUploadResponse = await fetch('https://slack.com/api/files.completeUploadExternal', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${bot_token}`,
-          'Content-Type': 'application/json; charset=utf-8',
+      const completeUploadResponse = await fetch(
+        'https://slack.com/api/files.completeUploadExternal',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${bot_token}`,
+            'Content-Type': 'application/json; charset=utf-8',
+          },
+          body: JSON.stringify({
+            files: [
+              {
+                id: getUploadUrlResult.file_id,
+                title: fileName,
+              },
+            ],
+          }),
         },
-        body: JSON.stringify({
-          files: [
-            {
-              id: getUploadUrlResult.file_id,
-              title: fileName,
-            },
-          ],
-        }),
-      });
+      );
 
       const completeUploadResult = await completeUploadResponse.json();
       console.log(`Complete upload response: ${JSON.stringify(completeUploadResult)}`);

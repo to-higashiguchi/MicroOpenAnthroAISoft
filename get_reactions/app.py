@@ -83,12 +83,11 @@ def fetch_slack_reactions(token, channel_id, minutes):
         for message in messages:
             # リアクションがついているメッセージのみ処理
             if message.get("reactions"):
-                message_ts = message["ts"]
 
                 try:
                     # reactions.get APIでリアクションの詳細を取得
                     reactions_response = client.reactions_get(
-                        channel=channel_id, timestamp=message_ts, full=True
+                        channel=channel_id, full=True
                     )
 
                     reactions_data = reactions_response.get("message", {}).get(
@@ -103,10 +102,9 @@ def fetch_slack_reactions(token, channel_id, minutes):
 
                             result["reactions"].append(
                                 {
-                                    "name": name, 
-                                    "users": users, 
+                                    "name": name,
+                                    "users": users,
                                     "count": len(users),
-                                    "timestamp": message_ts
                                 }
                             )
                             reaction_count += len(users)

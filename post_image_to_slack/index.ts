@@ -124,8 +124,10 @@ app.post('/', async (c) => {
       if (!completeResult.files || completeResult.files.length === 0) {
         throw new HTTPException(500, { message: 'failed to upload file to slack.' });
       }
-      const { id, url_private } = completeResult.files[0];
-      console.log(`Complete upload response: ${JSON.stringify({ id, url_private })}`);
+      const { url_private } = completeResult.files[0];
+      console.log(`Complete upload response: ${JSON.stringify(completeResult.files[0])}`);
+
+      await new Promise((resolve) => setTimeout(resolve, 100)); // url_privateが有効になるまで少し時間がかかる可能性がある（Geminiが言っている）
 
       // Step 4: メッセージと共にファイルを投稿
       const payload: ChatPostMessageArguments = {

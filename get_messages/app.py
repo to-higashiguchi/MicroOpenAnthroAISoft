@@ -1,5 +1,5 @@
 ##################################################
-# 設定した期間内のSlackチャンネルのメッセージとリアクションを取得するLambda関数
+# 設定した期間内のSlackチャンネルのメッセージを取得するLambda関数
 ##################################################
 
 import os
@@ -13,15 +13,15 @@ from slack_sdk.errors import SlackApiError
 MINUTES_TO_FETCH = 120
 
 
-def fetch_slack_reactions(token, channel_id, minutes):
+def fetch_slack_messages(token, channel_id, minutes):
     """
-    指定されたSlackチャンネルのリアクションを取得して出力します。
+    指定されたSlackチャンネルのメッセージを取得して出力します。
     Lambda用に結果も返します。
     """
     result = {
         "channel_id": channel_id,
         "minutes": minutes,
-        "reactions": [],
+        "messages": [],
         "summary": {},
     }
 
@@ -54,7 +54,7 @@ def fetch_slack_reactions(token, channel_id, minutes):
     }
 
     try:
-        # 1. conversations.history APIで指定期間のメッセージを取得
+        # conversations.history APIで指定期間のメッセージを取得
         print("📜 メッセージ履歴を取得中...")
         history_response = client.conversations_history(
             channel=channel_id,
@@ -68,60 +68,70 @@ def fetch_slack_reactions(token, channel_id, minutes):
             msg = "指定された期間にメッセージは見つかりませんでした。"
             print(msg)
             result["summary"]["message_count"] = 0
-            result["summary"]["reaction_count"] = 0
             return result
 
-        print(
-            f"👍 {len(messages)}件のメッセージが見つかりました。リアクションを取得します。"
-        )
+        print(f"👍 {len(messages)}件のメッセージが見つかりました。")
         print("-" * 40)
 
         result["summary"]["message_count"] = len(messages)
-        reaction_count = 0
 
-        # 2. 取得した各メッセージに対してリアクション情報を取得
+        # メッセージの詳細を処理
         for message in messages:
-            # リアクションがついているメッセージのみ処理
-            if message.get("reactions"):
-                message_ts = message["ts"]
+            message_ts = message["ts"]
+            user_id = message.get("user", "unknown")
+            text = message.get("text", "")
 
-                try:
-                    # reactions.get APIでリアクションの詳細を取得
-                    reactions_response = client.reactions_get(
-                        channel=channel_id, timestamp=message_ts, full=True
+            # タイムスタンプを日時に変換
+            message_datetime = datetime.fromtimestamp(float(message_ts), tz=jst)
+            formatted_time = message_datetime.strftime("%Y/%m/%d %H:%M:%S")
+
+            # ユーザー情報を取得（可能であれば）
+            user_name = user_id
+            try:
+                if user_id != "unknown":
+                    user_info = client.users_info(user=user_id)
+                    user_name = (
+                        user_info["user"]["real_name"] or user_info["user"]["name"]
                     )
+                    # APIレート制限を避けるため少し待機
+                    time.sleep(0.5)
+            except SlackApiError:
+                # ユーザー情報が取得できない場合はIDをそのまま使用
+                pass
 
-                    reactions_data = reactions_response.get("message", {}).get(
-                        "reactions", []
-                    )
+            message_data = {
+                "timestamp": message_ts,
+                "datetime": formatted_time,
+                "user_id": user_id,
+                "user_name": user_name,
+                "text": text,
+                "has_reactions": bool(message.get("reactions")),
+                "reaction_count": sum(
+                    len(r.get("users", [])) for r in message.get("reactions", [])
+                ),
+            }
 
-                    if reactions_data:
-                        for reaction in reactions_data:
-                            name = reaction["name"]  # リアクション名
-                            users = reaction["users"]
-                            print(f"  - :{name}: by {', '.join(users)}")
+            # スレッドメッセージの場合
+            if message.get("thread_ts"):
+                message_data["is_thread_reply"] = True
+                message_data["thread_ts"] = message["thread_ts"]
+            else:
+                message_data["is_thread_reply"] = False
 
-                            result["reactions"].append(
-                                {
-                                    "name": name,
-                                    "users": users,
-                                    "count": len(users),
-                                }
-                            )
-                            reaction_count += len(users)
+            # ファイルが添付されている場合
+            if message.get("files"):
+                message_data["has_files"] = True
+                message_data["file_count"] = len(message["files"])
+            else:
+                message_data["has_files"] = False
+                message_data["file_count"] = 0
 
-                    # Slack APIのレートリミットを避けるための待機 (Tier3: 50+ req/min)
-                    time.sleep(1.2)
+            result["messages"].append(message_data)
 
-                except SlackApiError as e:
-                    error_msg = f"リアクション取得エラー: {e.response['error']}"
-                    print(f"  ❌ {error_msg}")
-                    # エラーは個別のリアクションではなく全体のエラーとして記録
-                    if "error" not in result:
-                        result["error"] = []
-                    result["error"].append(error_msg)
+            print(
+                f"📝 [{formatted_time}] {user_name}: {text[:50]}{'...' if len(text) > 50 else ''}"
+            )
 
-        result["summary"]["reaction_count"] = reaction_count
         print("\n" + "-" * 40)
         print("✅ 処理が完了しました。")
 
@@ -171,23 +181,26 @@ def lambda_handler(event, context):
         # eventから期間を設定できるようにする（デフォルトは30分）
         minutes = event.get("minutes", MINUTES_TO_FETCH)
 
-        # Slackからリアクション情報を取得
-        result = fetch_slack_reactions(slack_bot_token, channel_id, minutes)
+        # Slackからメッセージ情報を取得
+        result = fetch_slack_messages(slack_bot_token, channel_id, minutes)
 
-        # resultにエラーキーが含まれているかチェック
-        if "error" in result and "reactions" not in result:
+        # APIエラーなどがresultに含まれている場合はエラーとして返す
+        if "error" in result and not result.get("messages"):
             return {
                 "statusCode": 500,
                 "body": json.dumps({"error": result["error"]}),
             }
 
-        # 'reactions' のリストのみを抽出
-        reactions_list = result.get("reactions", [])
+        # resultからmessagesのリストのみを抽出
+        messages_list = result.get("messages", [])
 
-        # 変更点：レスポンスのbodyにはreactionsのリストのみを含める
+        # 変更点: レスポンスボディにはmessagesのリストのみを含める
         return {
             "statusCode": 200,
-            "body": json.dumps(reactions_list, ensure_ascii=False),
+            "body": json.dumps(
+                messages_list,
+                ensure_ascii=False,  # 日本語のテキストが文字化けしないように設定
+            ),
         }
 
     except Exception as e:
@@ -213,5 +226,8 @@ if __name__ == "__main__":
     # bodyの中身をパースして確認
     if result.get("statusCode") == 200 and "body" in result:
         print("\n--- Parsed Body Content ---")
-        body_content = json.loads(result["body"])
-        print(json.dumps(body_content, indent=2, ensure_ascii=False))
+        try:
+            body_content = json.loads(result["body"])
+            print(json.dumps(body_content, indent=2, ensure_ascii=False))
+        except json.JSONDecodeError:
+            print("Body is not a valid JSON.")

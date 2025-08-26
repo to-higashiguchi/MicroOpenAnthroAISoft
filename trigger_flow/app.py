@@ -13,6 +13,14 @@ def lambda_handler(event, context):
     """
     try:
         api_key = os.environ.get("DIFY_API_KEY")
+        simple_token = os.environ.get("SIMPLE_TOKEN")
+
+        # パスが /{simple_token} でない場合は 403 を返す
+        if event["requestContext"]["http"]["path"] != f"/{simple_token}":
+            return {
+                "statusCode": 403,
+                "body": json.dumps({"error": "Forbidden"})
+            }
 
         url = "https://event-dify.tech-gather.org/v1/workflows/run"
 

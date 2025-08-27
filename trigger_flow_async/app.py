@@ -15,6 +15,7 @@ LONG_PROCESSING_LAMBDA_NAME = os.environ['LONG_PROCESSING_LAMBDA_NAME']
 def lambda_handler(event, context):
     # 1. POSTメソッドの検証
     if event['requestContext']['http']['method'] != 'POST':
+        print("[Error] Method Not Allowed")
         return {
             'statusCode': 405,
             'body': 'Method Not Allowed'
@@ -26,6 +27,7 @@ def lambda_handler(event, context):
 
     # ヘッダーが存在しない場合は検証失敗
     if not slack_timestamp or not slack_signature:
+        print("[Error] Required Slack headers not found.")
         return {
             'statusCode': 403,
             'body': 'Required Slack headers not found.'
@@ -33,6 +35,7 @@ def lambda_handler(event, context):
 
     # リプレイアタックを防ぐためのタイムスタンプチェック
     if abs(int(time.time()) - int(slack_timestamp)) > 60 * 5:
+        print("[Error] Request time is too old.")
         return {
             'statusCode': 400,
             'body': 'Request time is too old.'
@@ -51,6 +54,7 @@ def lambda_handler(event, context):
 
     # 生成した署名とSlackからの署名を比較
     if not hmac.compare_digest(my_signature, slack_signature):
+        print("[Error] Signature Mismatch.")
         return {
             'statusCode': 403,
             'body': 'Signature Mismatch.'

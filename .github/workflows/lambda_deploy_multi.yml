@@ -38,6 +38,9 @@ jobs:
           - name: trigger_flow_function
             directory: ./trigger_flow
             handler: app.lambda_handler
+          - name: trigger_flow_async_function
+            directory: ./trigger_flow_async
+            handler: app.lambda_handler
 
     steps:
       - name: Checkout code

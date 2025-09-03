@@ -1,0 +1,621 @@
+app:
+  description: からのノードをつなげた全体図
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: PrAIs-blank
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/bedrock:0.0.33@cabda4193ca273cddcbea6d645c467c146c88c8d6f4d711699802423f4fa162c
+kind: app
+version: 0.3.1
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_size_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInLoop: false
+        sourceType: start
+        targetType: http-request
+      id: 1755852882522-source-1755934823012-target
+      source: '1755852882522'
+      sourceHandle: source
+      target: '1755934823012'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: start
+        targetType: http-request
+      id: 1755852882522-source-17559349559030-target
+      source: '1755852882522'
+      sourceHandle: source
+      target: '17559349559030'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: http-request
+        targetType: code
+      id: 1755934823012-source-1755935407014-target
+      source: '1755934823012'
+      sourceHandle: source
+      target: '1755935407014'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: http-request
+        targetType: code
+      id: 17559349559030-source-1755935407014-target
+      source: '17559349559030'
+      sourceHandle: source
+      target: '1755935407014'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: llm
+      id: 1755935407014-source-1755853046940-target
+      source: '1755935407014'
+      sourceHandle: source
+      target: '1755853046940'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      id: 1755853046940-source-1755938513888-target
+      source: '1755853046940'
+      sourceHandle: source
+      target: '1755938513888'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: http-request
+      id: 1755938513888-source-1755938263458-target
+      source: '1755938513888'
+      sourceHandle: source
+      target: '1755938263458'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      id: 1755853046940-source-17559397615940-target
+      source: '1755853046940'
+      sourceHandle: source
+      target: '17559397615940'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: http-request
+        targetType: end
+      id: 1755939799427-source-1755939944435-target
+      source: '1755939799427'
+      sourceHandle: source
+      target: '1755939944435'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: http-request
+      id: 17559397615940-source-1755939799427-target
+      selected: false
+      source: '17559397615940'
+      sourceHandle: source
+      target: '1755939799427'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: http-request
+        targetType: code
+      id: 1755938263458-source-1755940187719-target
+      source: '1755938263458'
+      sourceHandle: source
+      target: '1755940187719'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: http-request
+      id: 1755940187719-source-1755939799427-target
+      source: '1755940187719'
+      sourceHandle: source
+      target: '1755939799427'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: ''
+        selected: false
+        title: Start
+        type: start
+        variables: []
+      height: 54
+      id: '1755852882522'
+      position:
+        x: 30
+        y: 299.5
+      positionAbsolute:
+        x: 30
+        y: 299.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1755935407014'
+          - datas
+        desc: チャンネルの投稿とリアクションから，褒めメッセージと、褒め画像生成プロンプトを作成
+        model:
+          completion_params:
+            model_name: Claude 3.7 Sonnet
+            response_format: JSON
+            temperature: 0.7
+          mode: chat
+          name: anthropic claude
+          provider: langgenius/bedrock/bedrock
+        prompt_template:
+        - id: 0909ad4d-47ba-4634-8a73-3163a8642f26
+          role: system
+          text: "## 指示\n過去にチャットで行われた会話とリアクションの一覧を入力します。\nリアクションと会話履歴は{{#1755935407014.datas#}}にあります．\n\
+            これらを元に、次の2つを出力してください。\n\n- チャットの参加者を称賛するメッセージ\n- 参加者を称賛する画像をAIに出力させるためのプロンプトテキスト\n\
+            \nメッセージは次のフォーマットに従ってください。\n\n```json\n{ \n  \"message\": \"// 参加者を称賛するメッセージ\"\
+            ,\n  \"image_prompt\": \"// 称賛画像を生成するためのプロンプト．英語で出力\"\n}\n```\n\n### チャットの参加者を褒めるメッセージ\n\
+            チャットを分析し、参加者同士が感謝していたり、褒めていたりする様子を評価し、それを称賛するメッセージを出力してください。語尾は「のだ」もしくは「かぐ〜」です。一文一文が終了する時には必ず語尾をつけてください。\n\
+            \n### 参加者を称賛する画像\nメッセージと同様の評価基準で参加者を評価し、それに基づいて参加者を称賛する「花束」の画像を作りたいです。\n\
+            画像の生成は別のLLMに依頼しますので、良い花束画像を生成するためのプロンプトを考え、出力してください。花束は評価が高いほど豪華になるようにしたいです。"
+        selected: false
+        structured_output:
+          schema:
+            additionalProperties: false
+            properties:
+              image_prompt:
+                description: 褒め画像を生成するためのプロンプト
+                type: string
+              message:
+                description: チャンネル参加者を褒めるためのメッセージ
+                type: string
+            required:
+            - message
+            - image_prompt
+            type: object
+        structured_output_enabled: false
+        title: LLM
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 150
+      id: '1755853046940'
+      position:
+        x: 942
+        y: 299.5
+      positionAbsolute:
+        x: 942
+        y: 299.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        author: to-higashiguchi
+        desc: ''
+        height: 88
+        selected: false
+        showAuthor: true
+        text: '{"root":{"children":[{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"1.
+          このフロー全体を1つの処理として，Dify-APIが作成される","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0,"textStyle":""},{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"2.
+          LambdaでこのDify-APIを定期的に実行するスケジュールを作成","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0,"textStyle":""}],"direction":"ltr","format":"","indent":0,"type":"root","version":1}}'
+        theme: blue
+        title: ''
+        type: ''
+        width: 240
+      height: 88
+      id: '1755853856310'
+      position:
+        x: 69.54346919637527
+        y: 541.1606960931131
+      positionAbsolute:
+        x: 69.54346919637527
+        y: 541.1606960931131
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-note
+      width: 240
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        desc: 過去120分以内のSlackのリアクションを出力
+        headers: X-Dify-Secret-Key:gen_str_20250826184216987123_f4a3c1b0-e2b3-4d5c-8978-9a1b2c3d4e5f_k9z7w3x6v8b1n4m5c2p0l
+        method: get
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: get_ractinos
+        type: http-request
+        url: https://3ci5lxrx42.execute-api.ap-northeast-1.amazonaws.com/get-ractions
+        variables: []
+      height: 199
+      id: '1755934823012'
+      position:
+        x: 334
+        y: 299.5
+      positionAbsolute:
+        x: 334
+        y: 299.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        desc: 過去120分以内に投稿されたメッセージを取得する
+        headers: X-Dify-Secret-Key:gen_str_20250826184216987123_f4a3c1b0-e2b3-4d5c-8978-9a1b2c3d4e5f_k9z7w3x6v8b1n4m5c2p0l
+        method: get
+        params: ''
+        retry_config:
+          max_retries: 1
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          connect: 120
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+          read: 120
+          write: 120
+        title: get_messages
+        type: http-request
+        url: https://3ci5lxrx42.execute-api.ap-northeast-1.amazonaws.com/get-messages
+        variables: []
+      height: 199
+      id: '17559349559030'
+      position:
+        x: 334
+        y: 538.5
+      positionAbsolute:
+        x: 334
+        y: 538.5
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        code: "\ndef main(arg1: str, arg2) -> str:\n    return {\n        \"datas\"\
+          : arg1 + arg2 ,\n    }\n"
+        code_language: python3
+        desc: ''
+        outputs:
+          datas:
+            children: null
+            type: string
+        selected: false
+        title: body->xxx
+        type: code
+        variables:
+        - value_selector:
+          - '17559349559030'
+          - body
+          value_type: string
+          variable: arg1
+        - value_selector:
+          - '1755934823012'
+          - body
+          value_type: string
+          variable: arg2
+      height: 54
+      id: '1755935407014'
+      position:
+        x: 638
+        y: 299.5
+      positionAbsolute:
+        x: 638
+        y: 299.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data:
+          - id: key-value-76
+            key: ''
+            type: text
+            value: "{\n  \"prompt\": \"{{#1755938513888.image_prompt#}}\"\n}"
+          type: json
+        desc: ''
+        headers: x-api-token:YswaycHjZUg2
+        method: post
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: 画像生成
+        type: http-request
+        url: https://xc37bl5gw3fecoe5vuwjaf5nz40vukvo.lambda-url.ap-northeast-1.on.aws/generate
+        variables: []
+      height: 171
+      id: '1755938263458'
+      position:
+        x: 1570.29077399675
+        y: 407
+      positionAbsolute:
+        x: 1570.29077399675
+        y: 407
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        code: "\nfunction main({arg1}) {\n    console.log(arg1)\n    return {\n  \
+          \      image_prompt: JSON.parse(arg1).image_prompt,\n\n    }\n}\n"
+        code_language: javascript
+        desc: ''
+        outputs:
+          image_prompt:
+            children: null
+            type: string
+        selected: false
+        title: get_image_prompt
+        type: code
+        variables:
+        - value_selector:
+          - '1755853046940'
+          - text
+          value_type: string
+          variable: arg1
+      height: 54
+      id: '1755938513888'
+      position:
+        x: 1246
+        y: 407
+      positionAbsolute:
+        x: 1246
+        y: 407
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        code: "\nfunction main({arg1}) {\n    console.log(arg1)\n    return {\n  \
+          \      message: JSON.parse(arg1).message\n    }\n}\n"
+        code_language: javascript
+        desc: ''
+        outputs:
+          message:
+            children: null
+            type: string
+        selected: false
+        title: get_praise_message
+        type: code
+        variables:
+        - value_selector:
+          - '1755853046940'
+          - text
+          value_type: string
+          variable: arg1
+      height: 54
+      id: '17559397615940'
+      position:
+        x: 1854
+        y: 299.5
+      positionAbsolute:
+        x: 1854
+        y: 299.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data:
+          - id: key-value-25
+            key: ''
+            type: text
+            value: "{\n    \"message\": \"{{#17559397615940.message#}}\",\n    \"\
+              s3Url\": \"{{#1755940187719.s3Url#}}\"\n}\n"
+          type: json
+        desc: ''
+        headers: ''
+        method: post
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: Slackへのメッセージ
+        type: http-request
+        url: https://4zqx5nw52kjbdf4rcqpjlanph40zqaqt.lambda-url.ap-northeast-1.on.aws/
+        variables: []
+      height: 155
+      id: '1755939799427'
+      position:
+        x: 2158
+        y: 299.5
+      positionAbsolute:
+        x: 2158
+        y: 299.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        outputs: []
+        selected: false
+        title: 終了
+        type: end
+      height: 54
+      id: '1755939944435'
+      position:
+        x: 2462
+        y: 299.5
+      positionAbsolute:
+        x: 2462
+        y: 299.5
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        code: "\nfunction main({arg1}) {\n    console.log(arg1)\n    return {\n  \
+          \      s3Url: JSON.parse(arg1).s3Url\n    }\n}\n"
+        code_language: javascript
+        desc: ''
+        outputs:
+          s3Url:
+            children: null
+            type: string
+        selected: false
+        title: get_s3_url
+        type: code
+        variables:
+        - value_selector:
+          - '1755938263458'
+          - body
+          value_type: string
+          variable: arg1
+      height: 54
+      id: '1755940187719'
+      position:
+        x: 1854
+        y: 407
+      positionAbsolute:
+        x: 1854
+        y: 407
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    viewport:
+      x: 152.15347995309753
+      y: 191.72634708138287
+      zoom: 0.6440191258903967
